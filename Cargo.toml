@@ -1,0 +1,6 @@
+[package]
+name = "to-and-from"
+version = "0.1.0"
+authors = ["George Pittarelli <g@gjp.cc>"]
+
+[dependencies]
