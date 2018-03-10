@@ -3,7 +3,8 @@
 //  from-args = "format" format-args | "filename" format-args
 //  bin-args = "--help"  # none specified yet, but
 //  main-args = "to" to-args ("from" from-args)? | "from" from-args "to" to-args
-//  path-main-args = "/path/to/to" to-args ("from" from-args)? | "/path/to/from" from-args "to" to-args
+//  path-main-args = "/path/to/to" to-args ("from" from-args)?
+//                   | "/path/to/from" from-args "to" to-args
 //  argv = "/path/to/to-and-from" bin-args main-args
 //         | "/path/to/to-and-from" from-args "to" to-args
 //         | "/path/to/to-and-from" to-args "from" from-args
