@@ -5,4 +5,6 @@ name = "to-and-from"
 version = "0.1.0"
 
 [dependencies]
+combine = "2.5.2"
+itertools = "0.7.7"
 num = "0.1.42"
