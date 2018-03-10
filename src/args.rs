@@ -43,7 +43,7 @@ parser! {
     fn aborc[I]()(I) -> i32
     where [I: Stream<Item = String>]
     {
-        token("123".to_string()).map(|s: String| 123)
+        token("123".to_string()).map(|_s: String| 123)
     }
 }
 fn other_section(section: &CliSection) -> &CliSection {
