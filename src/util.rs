@@ -2,6 +2,7 @@ extern crate num;
 use num::{PrimInt, Unsigned};
 use std::path::Path;
 
+#[allow(dead_code)]
 pub fn skip<'a, J, I, N>(i: &mut I, n: N) -> ()
 where
     J: 'a,
