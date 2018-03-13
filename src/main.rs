@@ -23,10 +23,8 @@ lazy_static! {
 }
 
 fn run(argv: Vec<String>) -> Result<(), args::CliError> {
-    let args = args::parse(&argv)?;
+    let args = args::parse(argv.clone())?;
     formats::text::load();
-
-    println!("HI! {:?} {:?}", args, args);
 
     let src: Box<formats::text::TextIR> =
         match args.from.map(args::parse_format).and_then(|p| p.path) {
@@ -36,9 +34,9 @@ fn run(argv: Vec<String>) -> Result<(), args::CliError> {
             None => formats::text::json_to_ir(Box::new(STDIN.lock())),
         };
 
-    let mut dest: Box<Write> = Box::new(STDOUT.lock());
+    let dest: Box<Write> = Box::new(STDOUT.lock());
 
-    formats::text::ir_to_csv(src, dest);
+    formats::text::ir_to_csv(src, dest)?;
 
     Ok(())
 }

@@ -4,6 +4,7 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 use combine::{eof, many, optional, satisfy, ParseError, Parser, Stream, many1};
 use util::basename;
+use csv;
 
 #[derive(Debug, PartialEq)]
 pub enum CliSection {
@@ -193,8 +194,17 @@ impl From<io::Error> for CliError {
     }
 }
 
+impl From<csv::Error> for CliError {
+    fn from(error: csv::Error) -> Self {
+        println!("csv err: {:?}", error);
+        CliError {
+            message: "csv is bad".to_string(),
+        }
+    }
+}
+
 /// Parse a command line (eg, C's argv)
-pub fn parse(args: &Vec<String>) -> Result<CliArgs, CliError> {
+pub fn parse(args: Vec<String>) -> Result<CliArgs, CliError> {
     let (parsed, _) = cli_args().parse(args.as_slice())?;
     Ok(parsed)
 }

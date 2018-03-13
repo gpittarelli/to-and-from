@@ -9,7 +9,9 @@ use std::iter;
 use std::slice;
 use std;
 use std::vec;
+use csv;
 use csv::Writer;
+use itertools::Itertools;
 
 pub fn load() -> () {
     let mut deps = Graph::<&str, &str>::new();
@@ -146,13 +148,16 @@ pub fn json_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
     Box::new(TextIR { rows: rows })
 }
 
-pub fn ir_to_csv(mut input: Box<TextIR>, mut output: Box<Write>) {
+pub fn ir_to_csv(
+    mut input: Box<TextIR>,
+    output: Box<Write>,
+) -> Result<(), csv::Error> {
     let mut csv_output = Writer::from_writer(output);
-    input
-        .rows
-        .as_mut()
-        .for_each(|t: Box<HashMap<String, String>>| {
-            let values: Vec<&String> = (*t).values().collect();
-            csv_output.encode(values);
-        });
+
+    for t in input.rows.as_mut() {
+        let values: Vec<&String> = (*t).values().collect();
+        csv_output.encode(values)?;
+    }
+
+    Ok(())
 }
