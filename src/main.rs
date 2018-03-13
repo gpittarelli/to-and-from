@@ -22,9 +22,11 @@ lazy_static! {
     static ref STDOUT: io::Stdout = io::stdout();
 }
 
-fn run(argv: &Vec<String>) -> Result<(), args::CliError> {
+fn run(argv: Vec<String>) -> Result<(), args::CliError> {
     let args = args::parse(&argv)?;
     formats::text::load();
+
+    println!("HI! {:?} {:?}", args, args);
 
     let src: Box<formats::text::TextIR> =
         match args.from.map(args::parse_format).and_then(|p| p.path) {
@@ -46,7 +48,7 @@ fn main() {
 
     let a: Box<BufRead> = Box::new(STDIN.lock()) as Box<BufRead>;
 
-    if let Err(e) = run(&args) {
+    if let Err(e) = run(args) {
         println!("woops: {:?}", e);
     }
 }
