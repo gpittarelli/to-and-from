@@ -1,10 +1,12 @@
 #[macro_use]
 extern crate combine;
+extern crate csv;
 extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 extern crate num;
 extern crate petgraph;
+extern crate serde_json;
 use std::env;
 use std::iter::Iterator;
 use std::io;
@@ -22,12 +24,6 @@ lazy_static! {
 
 fn run(argv: &Vec<String>) -> Result<(), args::CliError> {
     let args = args::parse(&argv)?;
-    println!(
-        "main:{:?}\nread: \nwrite: {:?}",
-        args.main,
-        //        args.from.map(args::parse_format),
-        args.to.map(args::parse_format),
-    );
     formats::text::load();
 
     let src: Box<formats::text::TextIR> =
@@ -41,10 +37,6 @@ fn run(argv: &Vec<String>) -> Result<(), args::CliError> {
     let mut dest: Box<Write> = Box::new(STDOUT.lock());
 
     formats::text::ir_to_csv(src, dest);
-    //     for l in src.lines() {
-    //         dest.write(l?.as_bytes());
-    //         dest.write(b"\n");
-    //     }
 
     Ok(())
 }
@@ -54,14 +46,7 @@ fn main() {
 
     let a: Box<BufRead> = Box::new(STDIN.lock()) as Box<BufRead>;
 
-    //     for l in a.lines() {
-    //         println!("{:?}", l);
-    //     }
-
     if let Err(e) = run(&args) {
         println!("woops: {:?}", e);
     }
-
-    //     let stdin = io::stdin();
-    //     println!("{:?}", stdin.lock().lines().last());
 }
