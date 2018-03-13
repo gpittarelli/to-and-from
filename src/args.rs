@@ -1,3 +1,4 @@
+use std::io;
 use std::str::FromStr;
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -183,6 +184,15 @@ impl<'a> From<ParseError<&'a [String]>> for CliError {
     }
 }
 
+impl From<io::Error> for CliError {
+    fn from(error: io::Error) -> Self {
+        println!("io err: {:?}", error);
+        CliError {
+            message: "hi".to_string(),
+        }
+    }
+}
+
 /// Parse a command line (eg, C's argv)
 pub fn parse(args: &Vec<String>) -> Result<CliArgs, CliError> {
     let (parsed, _) = cli_args().parse(args.as_slice())?;
@@ -192,14 +202,12 @@ pub fn parse(args: &Vec<String>) -> Result<CliArgs, CliError> {
 #[derive(Debug)]
 pub struct FileDescription {
     // If not present: stdio/stdout
-    path: Option<PathBuf>,
-    format: String,
+    pub path: Option<PathBuf>,
+    pub format: String,
 }
 
 /// Parse an individual file format (either a from or a to section)
 pub fn parse_format(args: FormatArgs) -> FileDescription {
-    println!("convert {:?}", args);
-
     let first = &args[0];
     let path = if first.contains(".") {
         Some(Path::new(&first))
