@@ -46,8 +46,6 @@ fn run(argv: Vec<String>) -> Result<(), args::CliError> {
 fn main() {
     let args = env::args().collect();
 
-    let a: Box<BufRead> = Box::new(STDIN.lock()) as Box<BufRead>;
-
     if let Err(e) = run(args) {
         println!("woops: {:?}", e);
     }
