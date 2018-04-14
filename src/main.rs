@@ -7,11 +7,7 @@ extern crate lazy_static;
 extern crate num;
 extern crate petgraph;
 extern crate serde_json;
-use std::env;
-use std::iter::Iterator;
-use std::io;
-use std::io::{BufRead, BufReader, Write};
-use std::fs::File;
+use std::{env, io, fs::File, io::{BufReader, Write}, iter::Iterator};
 
 mod util;
 mod args;
