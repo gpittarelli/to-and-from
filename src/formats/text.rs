@@ -1,17 +1,9 @@
 use petgraph::Graph;
-// use petgraph::dot::{Config, Dot};
 use std::io::{BufRead, Write};
-use std::ops::Index;
 use std::collections::HashMap;
 use serde_json;
-use serde_json::{Error, Value};
-use std::iter;
-use std::slice;
-use std;
-use std::vec;
+use serde_json::Value;
 use csv;
-use csv::Writer;
-use itertools::Itertools;
 
 pub fn load() -> () {
     let mut deps = Graph::<&str, &str>::new();
@@ -67,64 +59,68 @@ fn walk_json(
     val: Value,
 ) -> Box<Iterator<Item = (String, String)>> {
     match val {
-        Value::Null => panic!("WTF NULL"),
-        Value::Bool(b) => panic!("WTF bool"),
-        Value::Number(n) => panic!("WTF num"),
-        Value::String(s) => panic!("WTF string"),
+        // We should only ever recurse into arrays or objects:
+        Value::Null => panic!("walk_json: hit a primitive null"),
+        Value::Bool(_) => panic!("walk_json: hit a primitive bool"),
+        Value::Number(_) => panic!("walk_json: hit a primitive number"),
+        Value::String(_) => panic!("walk_json: hit a primitive string"),
+
         Value::Array(a) => {
-            //             let i = 0;
-            Box::new(a.into_iter().flat_map(move |v| {
-                //                 i = i + 1;
+            Box::new(a.into_iter().enumerate().flat_map(move |(i, v)| {
+                let new_path = format!("{:}[{:?}]", path, i);
                 match v {
-                    Value::Null => vec![
-                        (format!("{:?}a", path), "null".to_string()),
-                    ].into_iter(),
-                    Value::Bool(ref b) => vec![
-                        (format!("{:?}a", path), "null".to_string()),
-                    ].into_iter(),
-                    Value::Number(ref n) => vec![
-                        (format!("{:?}a", path), "null".to_string()),
-                    ].into_iter(),
-                    Value::String(ref s) => vec![
-                        (format!("{:?}a", path), "null".to_string()),
-                    ].into_iter(),
-                    Value::Array(ref a2) => vec![
-                        (format!("{:?}a", path), "null".to_string()),
-                    ].into_iter(),
-                    Value::Object(ref o) => vec![
-                        (format!("{:?}a", path), "null".to_string()),
-                    ].into_iter(),
+                    Value::Null => {
+                        vec![(new_path, "null".to_string())].into_iter()
+                    }
+                    Value::Bool(ref b) => {
+                        vec![(new_path, b.to_string())].into_iter()
+                    }
+                    Value::Number(ref n) => {
+                        vec![(new_path, n.to_string())].into_iter()
+                    }
+                    Value::String(ref s) => {
+                        vec![(new_path, s.to_string())].into_iter()
+                    }
+                    Value::Array(ref _a2) => {
+                        vec![(new_path, "arr".to_string())].into_iter()
+                    }
+                    Value::Object(ref _o) => {
+                        vec![(new_path, "obj".to_string())].into_iter()
+                    }
                 }
             })) as Box<Iterator<Item = (String, String)>>
         }
-        Value::Object(o) => {
-            //            panic!("WTF object");
-            Box::new(o.into_iter().flat_map(move |(k, v)| {
-                match v {
-                    Value::Null => vec![
-                        (join_path(path.clone(), k), "null".to_string()),
-                    ].into_iter(),
-                    Value::Bool(b) => vec![
+
+        Value::Object(o) => Box::new(o.into_iter().flat_map(move |(k, v)| {
+            match v {
+                Value::Null => Box::new(
+                    vec![(join_path(path.clone(), k), "null".to_string())]
+                        .into_iter(),
+                ),
+                Value::Bool(b) => Box::new(
+                    vec![
                         (
                             join_path(path.clone(), k),
                             (if b { "true" } else { "false" }).to_string(),
                         ),
                     ].into_iter(),
-                    Value::Number(n) => vec![
-                        (join_path(path.clone(), k), n.to_string()),
-                    ].into_iter(),
-                    Value::String(ref s) => vec![
-                        (join_path(path.clone(), k), "null".to_string()),
-                    ].into_iter(),
-                    Value::Array(ref a2) => vec![
-                        (join_path(path.clone(), k), "null".to_string()),
-                    ].into_iter(),
-                    Value::Object(ref o) => vec![
-                        (join_path(path.clone(), k), "null".to_string()),
-                    ].into_iter(),
-                }
-            })) as Box<Iterator<Item = (String, String)>>
-        }
+                ),
+                Value::Number(n) => Box::new(
+                    vec![(join_path(path.clone(), k), n.to_string())]
+                        .into_iter(),
+                ),
+                Value::String(ref s) => Box::new(
+                    vec![(join_path(path.clone(), k), s.to_string())]
+                        .into_iter(),
+                ),
+                Value::Array(_) => walk_json(join_path(path.clone(), k), v),
+                Value::Object(ref _o) => Box::new(
+                    vec![(join_path(path.clone(), k), "obj".to_string())]
+                        .into_iter(),
+                ),
+            }
+        }))
+            as Box<Iterator<Item = (String, String)>>,
     }
 }
 
@@ -133,6 +129,7 @@ pub fn json_to_row(input: Value) -> Box<HashMap<String, String>> {
     let mut book_reviews = HashMap::new();
 
     for (k, v) in walk_json("".to_string(), input) {
+        println!("insert {:?} {:?}", k, v);
         book_reviews.insert(k, v);
     }
 
@@ -141,6 +138,7 @@ pub fn json_to_row(input: Value) -> Box<HashMap<String, String>> {
 
 pub fn json_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
     let rows: Box<DataRows> = Box::new((*input).lines().map(|s| {
+        println!("Read json row");
         let v: Value = serde_json::from_str(s.unwrap().as_str()).unwrap();
         json_to_row(v)
     }));
@@ -149,14 +147,35 @@ pub fn json_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
 }
 
 pub fn ir_to_csv(
-    mut input: Box<TextIR>,
+    input: Box<TextIR>,
     output: Box<Write>,
 ) -> Result<(), csv::Error> {
-    let mut csv_output = Writer::from_writer(output);
+    let mut csv_output = csv::Writer::from_writer(output);
 
-    for t in input.rows.as_mut() {
-        let values: Vec<&String> = (*t).values().collect();
-        csv_output.encode(values)?;
+    let mut rows = input.rows.peekable();
+
+    let mut keys: Vec<String> = vec![];
+    {
+        let x = rows.peek().unwrap();
+        for k in x.keys() {
+            keys.push(k.to_string());
+        }
+    }
+
+    csv_output.encode(keys.clone());
+
+    for t in rows {
+        //         if keys.is_none() {
+        //             let k = t.clone();
+        //             keys = Some((*k).keys().collect::<Vec<&String>>());
+        //         }
+        let row = *t;
+        println!("write csv row");
+        let values: Vec<&String> = row.values().collect();
+
+        let out = keys.iter().map(|k| row.get(k)).collect::<Vec<_>>();
+
+        csv_output.encode(out)?;
     }
 
     Ok(())
