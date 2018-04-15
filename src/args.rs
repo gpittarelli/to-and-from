@@ -35,17 +35,18 @@ parser! {
     }
 }
 
-parser! {
-    fn cli_section_filename[I]()(I) -> String
-    where [I: Stream<Item = String>]
-    {
-        satisfy(|s: String| {
-            match basename(s.as_str()) {
-            Some(s) => is_section(s),
-            None => false
-        }})
-    }
-}
+// unused, for now
+// parser! {
+//     fn cli_section_filename[I]()(I) -> String
+//     where [I: Stream<Item = String>]
+//     {
+//         satisfy(|s: String| {
+//             match basename(s.as_str()) {
+//             Some(s) => is_section(s),
+//             None => false
+//         }})
+//     }
+// }
 
 parser! {
     fn non_section_filename[I]()(I) -> String
