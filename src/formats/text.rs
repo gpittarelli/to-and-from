@@ -69,24 +69,22 @@ fn walk_json(
             Box::new(a.into_iter().enumerate().flat_map(move |(i, v)| {
                 let new_path = format!("{:}[{:?}]", path, i);
                 match v {
-                    Value::Null => {
-                        vec![(new_path, "null".to_string())].into_iter()
-                    }
+                    Value::Null => Box::new(
+                        vec![(new_path, "null".to_string())].into_iter(),
+                    ),
                     Value::Bool(ref b) => {
-                        vec![(new_path, b.to_string())].into_iter()
+                        Box::new(vec![(new_path, b.to_string())].into_iter())
                     }
                     Value::Number(ref n) => {
-                        vec![(new_path, n.to_string())].into_iter()
+                        Box::new(vec![(new_path, n.to_string())].into_iter())
                     }
                     Value::String(ref s) => {
-                        vec![(new_path, s.to_string())].into_iter()
+                        Box::new(vec![(new_path, s.to_string())].into_iter())
                     }
-                    Value::Array(ref _a2) => {
-                        vec![(new_path, "arr".to_string())].into_iter()
-                    }
-                    Value::Object(ref _o) => {
-                        vec![(new_path, "obj".to_string())].into_iter()
-                    }
+                    Value::Array(ref _a2) => Box::new(
+                        vec![(new_path, "arr".to_string())].into_iter(),
+                    ),
+                    Value::Object(_) => walk_json(new_path, v),
                 }
             })) as Box<Iterator<Item = (String, String)>>
         }
@@ -162,7 +160,7 @@ pub fn ir_to_csv(
         }
     }
 
-    csv_output.encode(keys.clone());
+    csv_output.encode(keys.clone())?;
 
     for t in rows {
         //         if keys.is_none() {
@@ -171,10 +169,8 @@ pub fn ir_to_csv(
         //         }
         let row = *t;
         println!("write csv row");
-        let values: Vec<&String> = row.values().collect();
 
         let out = keys.iter().map(|k| row.get(k)).collect::<Vec<_>>();
-
         csv_output.encode(out)?;
     }
 
