@@ -127,7 +127,6 @@ pub fn json_to_row(input: Value) -> Box<HashMap<String, String>> {
     let mut book_reviews = HashMap::new();
 
     for (k, v) in walk_json("".to_string(), input) {
-        println!("insert {:?} {:?}", k, v);
         book_reviews.insert(k, v);
     }
 
@@ -136,7 +135,6 @@ pub fn json_to_row(input: Value) -> Box<HashMap<String, String>> {
 
 pub fn json_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
     let rows: Box<DataRows> = Box::new((*input).lines().map(|s| {
-        println!("Read json row");
         let v: Value = serde_json::from_str(s.unwrap().as_str()).unwrap();
         json_to_row(v)
     }));
@@ -168,8 +166,6 @@ pub fn ir_to_csv(
         //             keys = Some((*k).keys().collect::<Vec<&String>>());
         //         }
         let row = *t;
-        println!("write csv row");
-
         let out = keys.iter().map(|k| row.get(k)).collect::<Vec<_>>();
         csv_output.encode(out)?;
     }
