@@ -1,27 +1,8 @@
-use petgraph::Graph;
 use std::io::{BufRead, Write};
 use std::collections::HashMap;
 use serde_json;
 use serde_json::Value;
 use csv;
-
-pub fn load() -> () {
-    let mut deps = Graph::<&str, &str>::new();
-    let pg = deps.add_node("petgraph");
-    let fb = deps.add_node("fixedbitset");
-    let qc = deps.add_node("quickcheck");
-    let rand = deps.add_node("rand");
-    let libc = deps.add_node("libc");
-    deps.extend_with_edges(&[
-        (pg, fb),
-        (pg, qc),
-        (qc, rand),
-        (rand, libc),
-        (qc, libc),
-    ]);
-    //     println!("{:?}", Dot::with_config(&deps, &[Config::EdgeNoLabel]));
-    //     deps
-}
 
 /// Intermediate representation for translating between simple data
 /// file types

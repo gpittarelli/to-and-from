@@ -40,7 +40,6 @@ fn load_formats() -> FormatsMap {
 
 fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
     let args = args::parse(argv.clone())?;
-    formats::text::load();
 
     let src: Box<formats::text::TextIR> =
         match args.from.map(args::parse_format).and_then(|p| p.path) {
