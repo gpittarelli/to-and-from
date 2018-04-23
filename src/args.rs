@@ -217,7 +217,7 @@ pub struct FileDescription {
     pub format: String,
 }
 
-/// Parse an individual file format (either a from or a to section)
+/// Parse an individual file format (either a "from" or a "to" section)
 pub fn parse_format(args: FormatArgs) -> FileDescription {
     let first = &args[0];
     let path = if first.contains(".") {

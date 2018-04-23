@@ -7,7 +7,8 @@ extern crate lazy_static;
 extern crate num;
 extern crate petgraph;
 extern crate serde_json;
-use std::{env, io, fs::File, io::{BufReader, Write}, iter::Iterator};
+use std::{env, io, collections::HashMap, fs::File, io::{BufReader, Write},
+          iter::Iterator};
 
 mod util;
 mod args;
@@ -18,7 +19,26 @@ lazy_static! {
     static ref STDOUT: io::Stdout = io::stdout();
 }
 
-fn run(argv: Vec<String>) -> Result<(), args::CliError> {
+struct Format {
+    from: fn(Box<BufReader<io::Stdin>>) -> Box<formats::text::TextIR>,
+}
+
+type FormatsMap = HashMap<String, Format>;
+
+fn load_formats() -> FormatsMap {
+    let mut formats: FormatsMap = HashMap::new();
+
+    formats.insert(
+        "json".to_string(),
+        Format {
+            from: formats::text::json_to_ir,
+        },
+    );
+
+    formats
+}
+
+fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
     let args = args::parse(argv.clone())?;
     formats::text::load();
 
@@ -38,9 +58,10 @@ fn run(argv: Vec<String>) -> Result<(), args::CliError> {
 }
 
 fn main() {
+    let formats = load_formats();
     let args = env::args().collect();
 
-    if let Err(e) = run(args) {
+    if let Err(e) = run(args, formats) {
         println!("woops: {:?}", e);
     }
 }
