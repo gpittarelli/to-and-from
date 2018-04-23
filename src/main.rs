@@ -52,21 +52,18 @@ fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
 
     let f = args::parse_format(args.from.unwrap());
 
-    let src2 = match f.path.clone() {
+    let input = match f.path.clone() {
         Some(p) => open(p)?,
-        None => open(PathBuf::from("/dev/stdin"))?, // Box::new(BufSTDIN.lock()),
+        None => open(PathBuf::from("/dev/stdin"))?,
+        // TODO: Recover cross-platform support; would do via trait
+        // objects but we need them to be Sized
+        // Box::new(STDIN.lock()),
     };
 
-    //     let src: Box<formats::text::TextIR> = match f.path {
-    //         Some(p) => {
-    //             (formats[&f.format].from)(Box::new(BufReader::new(File::open(p)?)))
-    //         }
-    //         None => formats::text::json_to_ir(Box::new(STDIN.lock())),
-    //     };
     let src = (formats
         .get(&f.format)
         .ok_or(CliError::unknown_format(f))?
-        .from)(src2); // formats::text::json_to_ir(src2);
+        .from)(input);
 
     let dest: Box<Write> = Box::new(STDOUT.lock());
 
