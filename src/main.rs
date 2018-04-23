@@ -41,13 +41,18 @@ fn load_formats() -> FormatsMap {
 fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
     let args = args::parse(argv)?;
 
-    let src: Box<formats::text::TextIR> =
-        match args.from.map(args::parse_format).and_then(|p| p.path) {
-            Some(p) => formats::text::json_to_ir(Box::new(BufReader::new(
-                File::open(p)?,
-            ))),
-            None => formats::text::json_to_ir(Box::new(STDIN.lock())),
-        };
+    if args.from.is_none() {
+        return Err(args::CliError::from_error());
+    }
+
+    let f = args::parse_format(args.from.unwrap());
+
+    let src: Box<formats::text::TextIR> = match f.path {
+        Some(p) => {
+            formats::text::json_to_ir(Box::new(BufReader::new(File::open(p)?)))
+        }
+        None => formats::text::json_to_ir(Box::new(STDIN.lock())),
+    };
 
     let dest: Box<Write> = Box::new(STDOUT.lock());
 

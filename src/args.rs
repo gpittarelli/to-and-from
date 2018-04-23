@@ -171,6 +171,14 @@ pub struct CliError {
     message: String,
 }
 
+impl CliError {
+    pub fn from_error() -> CliError {
+        CliError {
+            message: "Missing \"from\" arguments".to_string(),
+        }
+    }
+}
+
 impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "CLI Error: {}", self.message)
