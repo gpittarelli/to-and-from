@@ -7,20 +7,21 @@ extern crate lazy_static;
 extern crate num;
 extern crate petgraph;
 extern crate serde_json;
-use std::{env, io, collections::HashMap, fs::File, io::{BufReader, Write},
-          iter::Iterator};
-
 mod util;
 mod args;
 mod formats;
+use std::{env, io, collections::HashMap, fs::File, io::{BufReader, Write},
+          iter::Iterator, path::PathBuf};
+use args::CliError;
 
 lazy_static! {
-    static ref STDIN: io::Stdin = io::stdin();
+//     static ref STDIN: io::Stdin = io::stdin();
     static ref STDOUT: io::Stdout = io::stdout();
 }
 
+#[derive(Debug)]
 struct Format {
-    from: fn(Box<BufReader<io::Stdin>>) -> Box<formats::text::TextIR>,
+    from: fn(Box<BufReader<File>>) -> Box<formats::text::TextIR>,
 }
 
 type FormatsMap = HashMap<String, Format>;
@@ -38,21 +39,34 @@ fn load_formats() -> FormatsMap {
     formats
 }
 
+fn open(p: PathBuf) -> Result<Box<BufReader<File>>, io::Error> {
+    Ok(Box::new(BufReader::new(File::open(p)?)))
+}
+
 fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
     let args = args::parse(argv)?;
 
     if args.from.is_none() {
-        return Err(args::CliError::from_error());
+        return Err(CliError::from_error());
     }
 
     let f = args::parse_format(args.from.unwrap());
 
-    let src: Box<formats::text::TextIR> = match f.path {
-        Some(p) => {
-            formats::text::json_to_ir(Box::new(BufReader::new(File::open(p)?)))
-        }
-        None => formats::text::json_to_ir(Box::new(STDIN.lock())),
+    let src2 = match f.path.clone() {
+        Some(p) => open(p)?,
+        None => open(PathBuf::from("/dev/stdin"))?, // Box::new(BufSTDIN.lock()),
     };
+
+    //     let src: Box<formats::text::TextIR> = match f.path {
+    //         Some(p) => {
+    //             (formats[&f.format].from)(Box::new(BufReader::new(File::open(p)?)))
+    //         }
+    //         None => formats::text::json_to_ir(Box::new(STDIN.lock())),
+    //     };
+    let src = (formats
+        .get(&f.format)
+        .ok_or(CliError::unknown_format(f))?
+        .from)(src2); // formats::text::json_to_ir(src2);
 
     let dest: Box<Write> = Box::new(STDOUT.lock());
 
@@ -66,6 +80,6 @@ fn main() {
     let args = env::args().collect();
 
     if let Err(e) = run(args, formats) {
-        println!("woops: {:?}", e);
+        eprintln!("{}", e);
     }
 }
