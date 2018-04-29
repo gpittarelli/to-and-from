@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use combine::{eof, many, optional, satisfy, ParseError, Parser, Stream, many1};
 use util::basename;
 use csv;
+use serde_json;
 
 #[derive(Debug, PartialEq)]
 pub enum CliSection {
@@ -214,6 +215,15 @@ impl From<csv::Error> for CliError {
         println!("csv err: {:?}", error);
         CliError {
             message: "csv is bad".to_string(),
+        }
+    }
+}
+
+impl From<serde_json::Error> for CliError {
+    fn from(error: serde_json::Error) -> Self {
+        println!("json err: {:?}", error);
+        CliError {
+            message: "json is bad".to_string(),
         }
     }
 }

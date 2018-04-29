@@ -25,7 +25,7 @@ lazy_static! {
 #[derive(Debug)]
 struct Format {
     from: fn(Box<BufReader<File>>) -> Box<TextIR>,
-    to: fn(Box<TextIR>, Box<Write>) -> Result<(), csv::Error>,
+    to: fn(Box<TextIR>, Box<Write>) -> Result<(), CliError>,
 }
 
 type FormatsMap = HashMap<String, Format>;

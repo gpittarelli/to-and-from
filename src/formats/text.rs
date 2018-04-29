@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde_json;
 use serde_json::Value;
 use csv;
+use args;
 
 /// Intermediate representation for translating between simple data
 /// file types
@@ -125,23 +126,29 @@ pub fn json_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
 
 pub fn ir_to_json(
     input: Box<TextIR>,
-    output: Box<Write>,
-) -> Result<(), csv::Error> {
-    panic!("Unimplemented");
+    mut output: Box<Write>,
+) -> Result<(), args::CliError> {
+    for t in input.rows {
+        let mut o = serde_json::Map::new();
+        for (k, v) in t.iter() {
+            o.insert(k.to_string(), serde_json::Value::String(v.to_string()));
+        }
+        output.write(serde_json::to_string(&o)?.as_bytes())?;
+        output.write(b"\n")?;
+    }
+    output.flush()?;
 
     Ok(())
 }
 
-pub fn csv_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
-    panic!("Unimplemented");
-
-    Box::new(TextIR { rows: rows })
+pub fn csv_to_ir<'a, 'b, T: BufRead + 'static>(_input: Box<T>) -> Box<TextIR> {
+    panic!("Unimplemented")
 }
 
 pub fn ir_to_csv(
     input: Box<TextIR>,
     output: Box<Write>,
-) -> Result<(), csv::Error> {
+) -> Result<(), args::CliError> {
     let mut csv_output = csv::Writer::from_writer(output);
 
     let mut rows = input.rows.peekable();
