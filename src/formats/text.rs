@@ -123,6 +123,21 @@ pub fn json_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
     Box::new(TextIR { rows: rows })
 }
 
+pub fn ir_to_json(
+    input: Box<TextIR>,
+    output: Box<Write>,
+) -> Result<(), csv::Error> {
+    panic!("Unimplemented");
+
+    Ok(())
+}
+
+pub fn csv_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
+    panic!("Unimplemented");
+
+    Box::new(TextIR { rows: rows })
+}
+
 pub fn ir_to_csv(
     input: Box<TextIR>,
     output: Box<Write>,

@@ -12,6 +12,7 @@ mod args;
 mod formats;
 use std::{env, io, collections::HashMap, fs::File, io::{BufReader, Write},
           iter::Iterator, path::PathBuf};
+use formats::text::TextIR;
 use args::CliError;
 
 lazy_static! {
@@ -21,18 +22,28 @@ lazy_static! {
 
 #[derive(Debug)]
 struct Format {
-    from: fn(Box<BufReader<File>>) -> Box<formats::text::TextIR>,
+    from: fn(Box<BufReader<File>>) -> Box<TextIR>,
+    to: fn(Box<TextIR>, Box<Write>) -> Result<(), csv::Error>,
 }
 
 type FormatsMap = HashMap<String, Format>;
 
 fn load_formats() -> FormatsMap {
-    let mut formats: FormatsMap = HashMap::new();
+    let mut formats = FormatsMap::new();
 
     formats.insert(
         "json".to_string(),
         Format {
             from: formats::text::json_to_ir,
+            to: formats::text::ir_to_json,
+        },
+    );
+
+    formats.insert(
+        "csv".to_string(),
+        Format {
+            from: formats::text::csv_to_ir,
+            to: formats::text::ir_to_csv,
         },
     );
 
@@ -51,6 +62,7 @@ fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
     }
 
     let f = args::parse_format(args.from.unwrap());
+    let to = args::parse_format(args.to.unwrap());
 
     let input = match f.path.clone() {
         Some(p) => open(p)?,
@@ -67,7 +79,10 @@ fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
 
     let dest: Box<Write> = Box::new(STDOUT.lock());
 
-    formats::text::ir_to_csv(src, dest)?;
+    (formats
+        .get(&to.format)
+        .ok_or(CliError::unknown_format(to))?
+        .to)(src, dest)?;
 
     Ok(())
 }
