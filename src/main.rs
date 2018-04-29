@@ -10,13 +10,15 @@ extern crate serde_json;
 mod util;
 mod args;
 mod formats;
-use std::{env, io, collections::HashMap, fs::File, io::{BufReader, Write},
-          iter::Iterator, path::PathBuf};
+use std::{env, io, collections::HashMap, fs::File,
+          io::{BufReader, BufWriter, Write}, iter::Iterator, path::PathBuf};
 use formats::text::TextIR;
 use args::CliError;
 
 lazy_static! {
-//     static ref STDIN: io::Stdin = io::stdin();
+// TODO: Recover cross-platform support; would do via trait
+// objects but we need them to be Sized
+//    static ref STDIN: io::Stdin = io::stdin();
     static ref STDOUT: io::Stdout = io::stdout();
 }
 
@@ -54,6 +56,10 @@ fn open(p: PathBuf) -> Result<Box<BufReader<File>>, io::Error> {
     Ok(Box::new(BufReader::new(File::open(p)?)))
 }
 
+fn open_out(p: PathBuf) -> Result<Box<Write>, io::Error> {
+    Ok(Box::new(BufWriter::new(File::create(p)?)))
+}
+
 fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
     let args = args::parse(argv)?;
 
@@ -61,28 +67,24 @@ fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
         return Err(CliError::from_error());
     }
 
-    let f = args::parse_format(args.from.unwrap());
+    let from = args::parse_format(args.from.unwrap());
     let to = args::parse_format(args.to.unwrap());
 
-    let input = match f.path.clone() {
-        Some(p) => open(p)?,
-        None => open(PathBuf::from("/dev/stdin"))?,
-        // TODO: Recover cross-platform support; would do via trait
-        // objects but we need them to be Sized
-        // Box::new(STDIN.lock()),
-    };
+    let input = open(from.path.clone().unwrap_or(PathBuf::from("/dev/stdin")))?;
+    let dest = to.path
+        .clone()
+        .map(open_out)
+        .unwrap_or(Ok(Box::new(BufWriter::new(STDOUT.lock()))))?;
 
-    let src = (formats
-        .get(&f.format)
-        .ok_or(CliError::unknown_format(f))?
+    let data = (formats
+        .get(&from.format)
+        .ok_or(CliError::unknown_format(&from))?
         .from)(input);
-
-    let dest: Box<Write> = Box::new(STDOUT.lock());
 
     (formats
         .get(&to.format)
-        .ok_or(CliError::unknown_format(to))?
-        .to)(src, dest)?;
+        .ok_or(CliError::unknown_format(&to))?
+        .to)(data, dest)?;
 
     Ok(())
 }

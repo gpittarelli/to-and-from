@@ -178,7 +178,7 @@ impl CliError {
         }
     }
 
-    pub fn unknown_format(f: FileDescription) -> CliError {
+    pub fn unknown_format(f: &FileDescription) -> CliError {
         CliError {
             message: format!("Unknnown format: \"{}\"", f.format),
         }
