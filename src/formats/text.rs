@@ -115,7 +115,7 @@ pub fn json_to_row(input: Value) -> Box<HashMap<String, String>> {
     Box::new(book_reviews)
 }
 
-pub fn json_to_ir<'a, 'b, T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
+pub fn json_to_ir<T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
     let rows: Box<DataRows> = Box::new((*input).lines().map(|s| {
         let v: Value = serde_json::from_str(s.unwrap().as_str()).unwrap();
         json_to_row(v)
@@ -141,8 +141,15 @@ pub fn ir_to_json(
     Ok(())
 }
 
-pub fn csv_to_ir<'a, 'b, T: BufRead + 'static>(_input: Box<T>) -> Box<TextIR> {
-    panic!("Unimplemented")
+pub fn csv_to_ir<T: BufRead + 'static>(input: Box<T>) -> Box<TextIR> {
+    //    let a = Box::new(csv::Reader::from_reader(*input));
+    let rows = Box::new((*input).lines().map(|_s| {
+        let r = HashMap::new();
+        //let v: Value = serde_json::from_str(s.unwrap().as_str()).unwrap();
+        Box::new(r)
+    }));
+
+    Box::new(TextIR { rows: rows })
 }
 
 pub fn ir_to_csv(
