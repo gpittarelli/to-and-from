@@ -168,7 +168,7 @@ pub fn ir_to_csv(
         }
     }
 
-    csv_output.encode(keys.clone())?;
+    csv_output.serialize(keys.clone())?;
 
     for t in rows {
         //         if keys.is_none() {
@@ -177,7 +177,7 @@ pub fn ir_to_csv(
         //         }
         let row = *t;
         let out = keys.iter().map(|k| row.get(k)).collect::<Vec<_>>();
-        csv_output.encode(out)?;
+        csv_output.serialize(out)?;
     }
 
     Ok(())
