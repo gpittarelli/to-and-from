@@ -1,9 +1,9 @@
-use std::io::{BufRead, Write};
-use std::collections::HashMap;
+use args;
+use csv;
 use serde_json;
 use serde_json::Value;
-use csv;
-use args;
+use std::collections::HashMap;
+use std::io::{BufRead, Write};
 
 /// Intermediate representation for translating between simple data
 /// file types
@@ -78,12 +78,10 @@ fn walk_json(
                         .into_iter(),
                 ),
                 Value::Bool(b) => Box::new(
-                    vec![
-                        (
-                            join_path(path.clone(), k),
-                            (if b { "true" } else { "false" }).to_string(),
-                        ),
-                    ].into_iter(),
+                    vec![(
+                        join_path(path.clone(), k),
+                        (if b { "true" } else { "false" }).to_string(),
+                    )].into_iter(),
                 ),
                 Value::Number(n) => Box::new(
                     vec![(join_path(path.clone(), k), n.to_string())]

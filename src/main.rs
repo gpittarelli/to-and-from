@@ -7,13 +7,20 @@ extern crate lazy_static;
 extern crate num;
 extern crate petgraph;
 extern crate serde_json;
-mod util;
 mod args;
 mod formats;
-use std::{env, io, collections::HashMap, fs::File,
-          io::{BufReader, BufWriter, Write}, iter::Iterator, path::PathBuf};
-use formats::text::TextIR;
+mod util;
 use args::CliError;
+use formats::text::TextIR;
+use std::{
+    collections::HashMap,
+    env,
+    fs::File,
+    io,
+    io::{BufReader, BufWriter, Write},
+    iter::Iterator,
+    path::PathBuf,
+};
 
 lazy_static! {
 // TODO: Recover cross-platform support; would do via trait
@@ -71,7 +78,8 @@ fn run(argv: Vec<String>, formats: FormatsMap) -> Result<(), args::CliError> {
     let to = args::parse_format(args.to.unwrap());
 
     let input = open(from.path.clone().unwrap_or(PathBuf::from("/dev/stdin")))?;
-    let dest = to.path
+    let dest = to
+        .path
         .clone()
         .map(open_out)
         .unwrap_or(Ok(Box::new(BufWriter::new(STDOUT.lock()))))?;

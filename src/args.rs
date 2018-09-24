@@ -1,11 +1,13 @@
-use std::io;
-use std::str::FromStr;
-use std::fmt;
-use std::path::{Path, PathBuf};
-use combine::{eof, many, optional, satisfy, ParseError, Parser, Stream, many1};
-use util::basename;
+use combine::{
+    eof, many, many1, optional, satisfy, ParseError, Parser, Stream,
+};
 use csv;
 use serde_json;
+use std::fmt;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use util::basename;
 
 #[derive(Debug, PartialEq)]
 pub enum CliSection {
@@ -250,7 +252,8 @@ pub fn parse_format(args: FormatArgs) -> FileDescription {
         None
     };
 
-    let format = path.and_then(|p| p.extension())
+    let format = path
+        .and_then(|p| p.extension())
         .and_then(|os| os.to_str())
         .map(|s| s.to_string())
         .unwrap_or(first.to_string());
